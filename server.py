@@ -3,6 +3,7 @@ import time
 import subprocess
 import urllib
 import urllib2
+import unirest
 import RPi.GPIO as GPIO
 from flask import Flask, request
 
@@ -11,33 +12,34 @@ ledPin = 21
 
 @app.route("/light")
 def light():
-	global ledOn
-	GPIO.output(ledPin, ledOn)
-	ledOn = not ledOn
-	return 'light on'
+    GPIO.output(ledPin, True)
+    return 'light on'
+    
+def chunk_words(phrase):
+    return [phrase]
 
 @app.route("/deploy", methods=['POST'])
 def deploy():
-	data = json.loads(request.get_data())
-	user_agent="Mozilla/5.0 (Windows; U; Windows NT 6.0; en-US; rv:1.9.1.5) Gecko/20091102 Firefox/3.5." 
-	tl = 'fr'
-	url = 'http://translate.google.com/translate_tts'
-	words = data['message'].split()
-	for word in words:
-		params = urllib.urlencode({'q':word, 'tl':tl})
-		req = urllib2.Request(url, params)
-		req.add_header('User-Agent', user_agent)
-		response = urllib2.urlopen(req) 
-		with open(word, 'wb') as file:
-            		file.write(response.read())
+    # For documentation, etc
+    # https://www.mashape.com/voicerss/text-to-speech-1
+    # http://www.voicerss.org/api/documentation.aspx
+    data = json.loads(request.get_data())
+    phrase = data['message'].replace(' ', '%2C+')
+    audio_file = 'temp.mp3'
+    response = unirest.get("https://voicerss-text-to-speech.p.mashape.com/?key=a53b7934b4354456b9cceef9318c0e5c&c=mp3&f=22khz_8bit_mono&hl=en-gb&r=0&src={0}".format(phrase),
+        headers={
+            "X-Mashape-Key": "kJAXv7SL9QmshLDuufl6MfoVFeJyp10JEWOjsnn0fOpug9eEXU"
+        }
+    )
 
-	for word in words:
-		subprocess.call(['omxplayer', '-o', 'local', word])
-		time.sleep(0.5)
-	return 'hello'
+    with open(audio_file, 'wb') as file:
+        file.write(response.raw_body)
+
+    subprocess.call(['omxplayer', '-o', 'local', audio_file])
+    return data['message']
 
 if __name__ == "__main__":
-	ledOn = True
-	GPIO.setmode(GPIO.BCM)
-	GPIO.setup(ledPin, GPIO.OUT)
-	app.run('0.0.0.0', debug=True, port=12346)
+    ledOn = True
+    GPIO.setmode(GPIO.BCM)
+    GPIO.setup(ledPin, GPIO.OUT)
+    app.run('0.0.0.0', debug=True, port=12346)
