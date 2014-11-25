@@ -8,15 +8,6 @@ import RPi.GPIO as GPIO
 from flask import Flask, request
 
 app = Flask(__name__)
-ledPin = 21
-
-@app.route("/light")
-def light():
-    GPIO.output(ledPin, True)
-    return 'light on'
-    
-def chunk_words(phrase):
-    return [phrase]
 
 @app.route("/deploy", methods=['POST'])
 def deploy():
@@ -39,7 +30,4 @@ def deploy():
     return data['message']
 
 if __name__ == "__main__":
-    ledOn = True
-    GPIO.setmode(GPIO.BCM)
-    GPIO.setup(ledPin, GPIO.OUT)
     app.run('0.0.0.0', debug=True, port=12346)
