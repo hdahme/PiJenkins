@@ -26,9 +26,9 @@ def deploy():
     data = json.loads(request.get_data())
     phrase = data['message'].replace(' ', '%2C+')
     audio_file = 'temp.mp3'
-    response = unirest.get("https://voicerss-text-to-speech.p.mashape.com/?key=a53b7934b4354456b9cceef9318c0e5c&c=mp3&f=22khz_8bit_mono&hl=en-gb&r=0&src={0}".format(phrase),
+    response = unirest.get("https://voicerss-text-to-speech.p.mashape.com/?key={0}&c=mp3&f=22khz_8bit_mono&hl=en-gb&r=0&src={1}".format(VOICE_RSS_KEY, phrase),
         headers={
-            "X-Mashape-Key": "kJAXv7SL9QmshLDuufl6MfoVFeJyp10JEWOjsnn0fOpug9eEXU"
+            "X-Mashape-Key": MASHAPE_KEY
         }
     )
 
